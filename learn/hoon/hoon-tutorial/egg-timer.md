@@ -53,7 +53,7 @@ You can find the full definition of `bowl` in `sys/zuse.hoon`, but for now it's 
 `eny`  Entropy
 `now`  The current time of the event
 
-The `door` we've made has two arms `poke-noun` and `wake`. Gall is capable of dispatching `pokes`, or requests, to an app based on the mark of the data given along with that poke. These are sent to the arm with the name that matches the mark of the data. Here we use the generic `noun` mark
+The `door` we've made has two arms `poke-noun` and `wake`. Gall is capable of dispatching `pokes`, or requests, to an app based on the mark of the data given along with that poke. These are sent to the arm with the name that matches the mark of the data. Here we use the generic `noun` mark:
 
 ```
 ++  poke-noun
@@ -85,7 +85,7 @@ After `%wait`, we have the `path`, a `list` of `cords` that serves as the unique
 /(scot %da now)
 ```
 
-The `/` here is an irregular syntax to make a `path` and `scot` is going to transform `now`, the current time as given to us in the `bowl` from a `@da` to a `cord`.
+The `/` here is an irregular syntax to make a `path`, and `scot` is going to transform `now`, the current time as given to us by `bowl`, from a `@da` to a `cord`.
 
 The final part of this `syscall` is:
 
@@ -93,9 +93,9 @@ The final part of this `syscall` is:
 (add now t)
 ```
 
-`now` is again the current time, as a `@da` and `t` was our `@dr`. Through the magic of mathematics, we can add these two to get a `@da` that is `t` time in the future from now.
+`now` is the current time of type `@da`, and `t` was declared as `@dr`. Because they are both atoms, we can add `now` and `t` these two to get an atom that is `t` units of time into the future from `now`. That produced atom can be interpreted as a `@da`.
 
-That's all for our `poke-noun` arm. What about when the timer goes off? `behn` will create a `move` similar to how we created one only this time it will end up being dispatched back to us in the `++wake` arm.
+That's all for our `poke-noun` arm. But what about when the timer goes off? Behn will create a `move` similar to how we created one with `effect`, only this time it will end up being dispatched back to us in the `++wake` arm. Behn always looks for an arm named `++wake` when a timer goes off; it is defined this way in the vane's code. So any So any app that wants to use a timer trigger needs to have an arm called `++wake`.
 
 ```
 ++  wake
@@ -105,16 +105,16 @@ That's all for our `poke-noun` arm. What about when the timer goes off? `behn` w
   [~ +>.$]
 ```
 
-`wake` is a `gate` that has two arguments, a `wire` and a `(unit tang)` with the face `error`. The syntax used here `=wire` is a shortcut for `wire=wire`. A `wire` is a specialized kind of `path`. This will be the `path` we gave in our original `syscall` so that we can use to dispatch on if we wanted to do different things based on which event this is. In this case, we don't.
+`wake` is a `gate` that has two arguments: a `wire`, and a `(unit tang)` with the face `error`. The syntax of `=wire` is a shortcut for `wire=wire`; it's a common pattern to shadow the name of a type when you only have one instance of the type and are not going to refer to the type itself. A `wire` is just an alias for `path`. Our `wire` will be the `path` that we gave original `syscall`. If we needed to do something based on which request caused this gate to be called, we could use the wire to do so. In this case, we don't do perform such a dispatch.
 
-Next we have the same cast we used in `++poke-noun` to make sure we are producing the correct thing for Gall. These casts are not strictly speaking necessary as the type system can infer what the type will be but they can be very useful both for debugging our own code and for someone coming behind us trying to determine what our code should be producing.
+Next we have the same cast we used in `++poke-noun` to make sure we are producing the correct thing for Gall. These casts are not strictly necessary, as the type system can infer what the type will be, but they can be very useful both for debugging our own code and for someone else trying to determine what our code should be producing.
 
 ```
 ~&  "Timer went off!"
 ```
 
-`~&` is the debugging printf rune. Here we're simply going to output a message. We could however do any other computation here we wanted to happen when `++wait` gets called.
+`~&` is the debugging printf rune. Here we're using it to output a message. We could, however, modify this line of code to do any other computation we would want to happen when `++wait` gets called.
 
-Finally we need to produce our `effect`, which here is simply `[~ +>.$]` since we have no `syscall` or `cards` we want to make and we are not changing the state of our app, we just use the `door` without changing its sample.
+Finally, we need to produce our `effect`. Here the effect is simply `[~ +>.$]`, since we have no `syscall` to make and we are not changing the state of our app. We just use the `door` without changing its sample.
 
 ### [Next Up: Reading -- Ford](../ford)
